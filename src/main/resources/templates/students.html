@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Management System</title>
+    <style>
+        :root {
+            --base: #1c1f26;
+            --subtle: #2e3440;
+            --rain: #2C3845;
+            --poppy: #BD2A4E;
+            --accent: #469393;
+        }
+        body {
+            background-color: var(--base);
+            font-family: 'Lato', sans-serif;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            position: sticky;
+            top: 0;
+            background-color: var(--subtle);
+            padding: 20px 40px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: rgb(38, 135, 159);
+            text-decoration: none;
+        }
+        .main-container {
+            width: 100%;
+            max-width: 1250px;
+            margin: auto;
+            padding: 20px;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 20px;
+        }
+
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+        }
+        .button {
+            font-size: 1.2rem;
+            border-radius: 5px;
+            color: #fff;
+            padding: 6px 10px;
+            background-color: #4a9190;
+            cursor: pointer;
+            border: none;
+        }
+        .button:hover {
+            background-color: #3f7a79;
+        }
+        .delete-button {
+            background-color: var(--poppy);
+            text-decoration: none;
+        }
+        .delete-button:hover {
+            background-color: #a62643;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #1f2a36;
+            margin: 30px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        thead {
+            background-color: var(--subtle);
+        }
+        thead tr th, tbody td, tfoot th {
+            padding: 12px;
+            border: 1px solid #37424e;
+            font-size: 1.2rem;
+            text-align: left;
+        }
+        tbody tr:hover {
+            background-color: #2c3e50;
+            transition: 0.3s ease;
+        }
+        tfoot th {
+            text-align: center;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+        }
+        .modal-content {
+            background-color: #2e3440;
+            margin: 10% auto;
+            padding: 30px 70px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            color: white;
+            box-shadow: 0 0 10px #000;
+        }
+        .modal-content label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        .modal-content input {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .close-btn {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .close-btn:hover {
+            color: #fff;
+        }
+        .submit-btn {
+            background-color: var(--accent);
+            border: none;
+            color: #000;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #4a9190;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="/students" class="navbar">Student Management System</a>
+</div>
+
+<main>
+    <div class="main-container">
+        <div class="top-bar">
+            <h1>List of All Students</h1>
+            <div style="display: flex; flex-direction: column; gap: 0.7rem;">
+                <button class="button" onclick="openModal()">Add Student</button>
+                <button class="button" onclick="openFindModal()">Find Student</button>
+            </div>
+        </div>
+
+
+        <table>
+            <thead>
+            <tr>
+                <th>Roll Number</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>E-mail</th>
+                <th>Phone</th>
+                <th>Age</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="student : ${students}">
+                <td th:text="${student.rollNumber}"></td>
+                <td th:text="${student.firstName}"></td>
+                <td th:text="${student.lastName}"></td>
+                <td th:text="${student.email}"></td>
+                <td th:text="${student.phone}"></td>
+                <td th:text="${student.age}"></td>
+
+                <td>
+                    <button class="button"
+                            th:attr="data-id=${student.id},
+                            data-rollnumber=${student.rollNumber},
+                            data-fname=${student.firstName},
+                            data-lname=${student.lastName},
+                            data-email=${student.email},
+                            data-phone=${student.phone},
+                            data-age=${student.age}"
+
+                            onclick="handleEditClick(this)">
+                        Update
+                    </button>
+                    <a th:href="@{/students/{id}(id=${student.id})}" class="button delete-button">Delete</a>
+                </td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <th colspan="7">Academic Year: 2025</th>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</main>
+
+<!-- Add Student Modal -->
+<div id="studentModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>Add New Student</h2>
+        <form action="/students" method="post" th:object="${student}">
+            <label for="roll1Number" >Roll Number</label>
+            <input type="text" name="rollNumber" id="roll1Number" required />
+            <div th:if="${rollError}" style="color: red; font-size: 0.9rem;">
+                <span th:text="${rollError}"></span>
+            </div>
+            <label for="firstName">First Name</label>
+            <input type="text" name="firstName" id="firstName" required />
+            <label for="lastName">Last Name</label>
+            <input type="text" name="lastName" id="lastName" required />
+            <label for="email">Email</label>
+            <input type="email" name="email" id="email" required />
+            <label for="phone">Phone</label>
+            <input type="text" name="phone" id="phone" required />
+            <label for="age">Age</label>
+            <input type="number" name="age" id="age" required />
+
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+    </div>
+</div>
+
+<!-- Update Student Modal -->
+<div id="studenteditModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>Update Student</h2>
+        <form id="editStudentForm" method="post">
+            <label for="roll12Number">Roll Number</label>
+            <input type="text" name="rollNumber" id="roll12Number" readonly onclick="showRollNumberMessage()" />
+            <p id="rollNumberWarning" style="color: #ff6b6b; font-size: 0.9rem; display: none;">⚠️ Cannot edit Roll Number</p>
+            <label for="firstNameEdit">First Name</label>
+            <input type="text" name="firstName" id="firstNameEdit" required />
+            <label for="lastNameEdit">Last Name</label>
+            <input type="text" name="lastName" id="lastNameEdit" required />
+            <label for="emailEdit">Email</label>
+            <input type="email" name="email" id="emailEdit" required />
+            <label for="phoneEdit">Phone</label>
+            <input type="text" name="phone" id="phoneEdit" required />
+            <label for="ageEdit">Age</label>
+            <input type="number" name="age" id="ageEdit" required />
+
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+    </div>
+</div>
+
+<!-- Find Student Modal -->
+<div id="findStudentModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>Find Student</h2>
+        <form action="/students/find" method="get">
+            <label for="rollNumber">Roll Number</label>
+            <input type="text" name="rollNumber" id="rollNumber" required />
+            <button type="submit" class="submit-btn">Search</button>
+        </form>
+    </div>
+</div>
+
+<!-- Found Student Modal -->
+<div id="foundStudentModal" class="modal" th:if="${foundStudent != null}">
+    <div class="modal-content" style="
+        background-color: #202833;
+        margin: 8% auto;
+        padding: 30px 40px;
+        border-radius: 12px;
+        max-width: 450px;
+        width: 90%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-family: 'Segoe UI', sans-serif;
+        position: relative;
+    ">
+        <span class="close-btn" onclick="closeModal()" style="
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.6rem;
+            color: #aaa;
+            cursor: pointer;
+        ">&times;</span>
+        <h2 style="
+            text-align: center;
+            margin-bottom: 20px;
+            color: #6ec2b0;
+            font-size: 1.8rem;
+            border-bottom: 2px solid #444;
+            padding-bottom: 10px;
+        ">🎓 Student Found</h2>
+
+        <div style="line-height: 1.8; font-size: 1.1rem;">
+            <p><strong>Roll Number:</strong> <span th:text="${foundStudent.rollNumber}"></span></p>
+            <p><strong>Name:</strong> <span th:text="${foundStudent.firstName + ' ' + foundStudent.lastName}"></span></p>
+            <p><strong>Email:</strong> <span th:text="${foundStudent.email}"></span></p>
+            <p><strong>Phone:</strong> <span th:text="${foundStudent.phone}"></span></p>
+            <p><strong>Age:</strong> <span th:text="${foundStudent.age}"></span></p>
+
+        </div>
+
+        <div style="text-align: center; margin-top: 25px;">
+            <button onclick="closeModal()" class="button" style="
+                background-color: #4a9190;
+                color: #fff;
+                border: none;
+                padding: 10px 20px;
+                font-size: 1rem;
+                border-radius: 6px;
+                cursor: pointer;
+            ">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Student Not Found Modal -->
+<div id="studentNotFoundModal" class="modal" th:if="${notFound}">
+    <div class="modal-content" style="
+        background-color: #2b2e3b;
+        margin: 12% auto;
+        padding: 30px 40px;
+        border-radius: 12px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-family: 'Segoe UI', sans-serif;
+        position: relative;
+        text-align: center;
+    ">
+        <span class="close-btn" onclick="closeModal()" style="
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.6rem;
+            color: #aaa;
+            cursor: pointer;
+        ">&times;</span>
+        <h2 style="
+            color: #ff6b6b;
+            font-size: 1.7rem;
+            margin-bottom: 15px;
+        ">⚠️ Student Not Found</h2>
+        <p style="font-size: 1.1rem;">No student found with the entered Roll Number.</p>
+        <button onclick="closeModal()" class="button" style="
+            background-color: #4a9190;
+            margin-top: 20px;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+        ">Close</button>
+    </div>
+</div>
+<!-- Student Deleted Modal -->
+<div id="studentDeletedModal" class="modal" th:if="${deleted}">
+    <div class="modal-content" style="
+        background-color: #243041;
+        margin: 12% auto;
+        padding: 30px 40px;
+        border-radius: 12px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-family: 'Segoe UI', sans-serif;
+        text-align: center;
+        position: relative;
+    ">
+        <span class="close-btn" onclick="closeModal()" style="
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.6rem;
+            color: #aaa;
+            cursor: pointer;
+        ">&times;</span>
+        <h2 style="color: #66d9b3; font-size: 1.7rem;">✅ Student Deleted</h2>
+        <p style="font-size: 1.1rem;">The student record has been successfully deleted.</p>
+        <button onclick="closeModal()" class="button" style="
+            background-color: #4a9190;
+            margin-top: 20px;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+        ">Close</button>
+    </div>
+</div>
+
+
+<script th:if="${rollError}">
+    window.onload = function () {
+        const hash = window.location.hash;
+        if (hash === "#add") {
+            document.getElementById("studentModal").style.display = "block";
+            history.replaceState("", document.title, window.location.pathname);
+        }
+    };
+</script>
+
+
+<script th:if="${foundStudent != null}">
+    window.onload = function () {
+        document.getElementById("foundStudentModal").style.display = "block";
+    };
+</script>
+
+<script th:if="${notFound}">
+    window.onload = function () {
+        document.getElementById("studentNotFoundModal").style.display = "block";
+    };
+</script>
+
+<script th:if="${deleted}">
+    window.onload = function () {
+        document.getElementById("studentDeletedModal").style.display = "block";
+    };
+</script>
+
+
+<script>
+    function openModal() {
+        document.getElementById("studentModal").style.display = "block";
+    }
+
+    function openFindModal() {
+        document.getElementById("findStudentModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("studentModal").style.display = "none";
+        document.getElementById("studenteditModal").style.display = "none";
+        document.getElementById("findStudentModal").style.display = "none";
+
+        const foundModal = document.getElementById("foundStudentModal");
+        if (foundModal) foundModal.style.display = "none";
+
+        const notFoundModal = document.getElementById("studentNotFoundModal");
+        if (notFoundModal) notFoundModal.style.display = "none";
+
+        const deletedModal = document.getElementById("studentDeletedModal");
+        if (deletedModal) deletedModal.style.display = "none";
+    }
+
+
+    function openEditModal(id, firstName, lastName, email, phone, age, rollNumber) {
+        document.getElementById("firstNameEdit").value = firstName;
+        document.getElementById("lastNameEdit").value = lastName;
+        document.getElementById("emailEdit").value = email;
+        document.getElementById("phoneEdit").value = phone;
+        document.getElementById("ageEdit").value = age;
+        document.getElementById("roll12Number").value = rollNumber; // <- This was missing
+        document.getElementById("editStudentForm").action = `/students/${id}`;
+        document.getElementById("studenteditModal").style.display = "block";
+    }
+
+
+    function handleEditClick(button) {
+        openEditModal(
+            button.getAttribute("data-id"),
+            button.getAttribute("data-fname"),
+            button.getAttribute("data-lname"),
+            button.getAttribute("data-email"),
+            button.getAttribute("data-phone"),
+            button.getAttribute("data-age"),
+            button.getAttribute("data-rollnumber") // <- Add this
+        );
+
+    }
+    function showRollNumberMessage() {
+        const msg = document.getElementById("rollNumberWarning");
+        msg.style.display = "block";
+    }
+
+
+
+    window.onclick = function(event) {
+        ['studentModal', 'studenteditModal', 'findStudentModal', 'foundStudentModal', 'studentNotFoundModal', 'studentDeletedModal'].forEach(id => {
+            const modal = document.getElementById(id);
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        });
+    };
+
+
+</script>
+</body>
+</html>
