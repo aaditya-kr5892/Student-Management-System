@@ -1,14 +1,16 @@
-# Use OpenJDK 17 slim image
+FROM maven:3.9.4-eclipse-temurin-17 as build
+
+WORKDIR /app
+COPY . .
+
+RUN mvn clean package -DskipTests
+
+# ---- Final image ----
 FROM openjdk:17-jdk-slim
 
-# Set working directory
 WORKDIR /app
 
-# Copy the built jar into the image
-COPY target/Student-Management-System-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/Student-Management-System-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose Spring Boot default port
 EXPOSE 8080
-
-# Run the application
 CMD ["java", "-jar", "app.jar"]
