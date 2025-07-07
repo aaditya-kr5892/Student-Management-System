@@ -22,6 +22,8 @@ Built using Java, Spring Boot, Thymeleaf, and MySQL Database.
 
 ---
 
+⛓️‍💥 Live Site: https://student-management-system-52v2.onrender.com/students
+
 ## 🚀 Getting Started
 
 ### 1️⃣ Clone the repository
